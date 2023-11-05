@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 async function autoFillAndSubmitForm(usuario, senha) {
     const browser = await puppeteer.launch({
-        headless: false, // Torna o navegador visível
+        headless: true, // Torna o navegador visível
     });
     const page = await browser.newPage();
   
@@ -24,14 +24,17 @@ async function autoFillAndSubmitForm(usuario, senha) {
     
     await page.waitForSelector('#name');
     await page.type('#name', usuario);
+    console.log('digitando usuario');
 
     await page.waitForSelector('#senha');
     await page.type('#senha', senha);
-  
+    console.log('digitando senha');
+    
     // Clique no botão de login (substitua o seletor apropriado)
     await page.waitForSelector('#botaoEntrar');
     await page.click('#botaoEntrar');
-  
+    console.log('entrando em outra pagina');
+    
     // Espere segundos antes de continuar a execução
     await new Promise((resolve) => setTimeout(resolve, 3500));
     
@@ -41,6 +44,7 @@ async function autoFillAndSubmitForm(usuario, senha) {
     // Espere segundos antes de continuar a execução
     await new Promise((resolve) => setTimeout(resolve, 2500));
     
+    console.log('coletando dados');
     const dadosDasDivs = await page.evaluate(() => {
       const divs = document.querySelectorAll('.form-group');
       const dados = [];
@@ -63,6 +67,7 @@ async function autoFillAndSubmitForm(usuario, senha) {
     console.log(dadosDasDivs);
 
     await browser.close();
+    
     const responseJSON = { dadosDasDivs };
     return responseJSON;
 }
