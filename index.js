@@ -13,13 +13,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 async function autoFillAndSubmitForm(usuario, senha) {
     const browser = await puppeteer.launch({
-        headless: true, // Torna o navegador visível
+        headless: false, // Torna o navegador visível
     });
     const page = await browser.newPage();
   
     await page.goto('https://sed.educacao.sp.gov.br/'); // URL do site
   
-
+    const ra = usuario.slice(0,12);
+    const digito = usuario.slice(-1);
+    
     await page.waitForSelector('#name');
     await page.type('#name', usuario);
 
@@ -30,25 +32,45 @@ async function autoFillAndSubmitForm(usuario, senha) {
     await page.waitForSelector('#botaoEntrar');
     await page.click('#botaoEntrar');
   
-    // Aguarda o elemento com o ID "idPerfilMs" aparecer na página
-    await page.waitForSelector('#idPerfilMs');
-
-  // Coleta o conteúdo do elemento LI com o ID "idPerfilMs"
-    const idPerfilMsContent = await page.$eval('#idPerfilMs', (element) => {
-        return element.textContent;
+    // Espere segundos antes de continuar a execução
+    await new Promise((resolve) => setTimeout(resolve, 3500));
+    
+    // PEGANDO BOLETIM 2023 
+    await page.goto('https://sed.educacao.sp.gov.br/Aluno/ConsultaAluno'); // URL do site
+    
+    // Espere segundos antes de continuar a execução
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    
+    const dadosDasDivs = await page.evaluate(() => {
+      const divs = document.querySelectorAll('.form-group');
+      const dados = [];
+  
+      divs.forEach((div) => {
+        const input = div.querySelector('input');
+        const label = div.querySelector('label');
+        if (input && label) {
+          dados.push({
+            valorInput: input.value,
+            textoLabel: label.textContent
+          });
+        }
+      });
+  
+      return dados;
     });
-    console.log(idPerfilMsContent);
+
+    // Agora, a variável "valoresDosInputs" contém os valores de todos os inputs encontrados nas divs com a classe "form-group"
+    console.log(dadosDasDivs);
 
     await browser.close();
-  
-  const responseJSON = { idPerfilMsContent };
-  return responseJSON;
+    const responseJSON = { dadosDasDivs };
+    return responseJSON;
 }
 
 app.get('/login', (req, res) => {
     const usuario = req.query.usuario;
-    const senhaCodificada = req.query.senha; // Senha codificada na URL
-    const senha = decodeURIComponent(senhaCodificada); // Decodifica a senha
+    const senhaAlterada = req.query.senha;
+    const senha = decodeURIComponent(senhaAlterada);
 
     // Verifica se o usuário e a senha foram fornecidos na URL
     if (!usuario || !senha) {
