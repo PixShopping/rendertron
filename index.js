@@ -1,4 +1,4 @@
-// BIBLIOTECAS
+// BIBLIOTECA
 const express = require('express');
 const puppeteer = require('puppeteer');
 const bodyParser = require('body-parser');
@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 async function autoFillAndSubmitForm(usuario, senha) {
     const browser = await puppeteer.launch({
-        headless: false, // Torna o navegador visível
+        headless: true, // Torna o navegador visível é FALSE
     });
     const page = await browser.newPage();
   
