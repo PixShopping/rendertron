@@ -1,4 +1,4 @@
-// BIBLIOTECA
+// BIBLIOTECAS
 const express = require('express');
 const puppeteer = require('puppeteer');
 const bodyParser = require('body-parser');
@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 async function autoFillAndSubmitForm(usuario, senha) {
     const browser = await puppeteer.launch({
-        headless: true, // Torna o navegador visível é FALSE
+        headless: true, // Torna o navegador visível
     });
     const page = await browser.newPage();
   
@@ -27,11 +27,11 @@ async function autoFillAndSubmitForm(usuario, senha) {
 
     await page.waitForSelector('#senha');
     await page.type('#senha', senha);
-  
+    
     // Clique no botão de login (substitua o seletor apropriado)
     await page.waitForSelector('#botaoEntrar');
     await page.click('#botaoEntrar');
-  
+    
     // Espere segundos antes de continuar a execução
     await new Promise((resolve) => setTimeout(resolve, 2000));
     
@@ -60,6 +60,7 @@ async function autoFillAndSubmitForm(usuario, senha) {
     });
 
     await browser.close();
+    
     const responseJSON = { dadosDasDivs };
     return responseJSON;
 }
