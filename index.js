@@ -65,26 +65,95 @@ async function autoFillAndSubmitForm(usuario, senha) {
     return responseJSON;
 }
 
-app.get('/login', (req, res) => {
-    const usuario = req.query.usuario;
-    const senhaAlterada = req.query.senha;
-    const senha = decodeURIComponent(senhaAlterada);
-
-    // Verifica se o usuário e a senha foram fornecidos na URL
-    if (!usuario || !senha) {
-      return res.status(400).json({ error: 'Usuário e senha são obrigatórios.' });
-    }
-  
-    // Chama a função para preencher o formulário e fazer login com os parâmetros recebidos
-    autoFillAndSubmitForm(usuario, senha)
-      .then((data) => {
-        return res.json(data);
-      })
-      .catch((error) => {
-        console.error('Erro ao preencher o formulário e fazer login:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
-      });
+async function boletimSed(usuario, senha) {
+  const browser = await puppeteer.launch({
+      headless: true, // Torna o navegador visível usar FALSE
   });
+
+  const page = await browser.newPage();
+  
+  await page.goto('https://sed.educacao.sp.gov.br/');
+
+  const ra = usuario.slice(0,12);
+  const digito = usuario.slice(-1);
+  
+  await page.waitForSelector('#name');
+  await page.type('#name', `${usuario}SP`);
+
+  await page.waitForSelector('#senha');
+  await page.type('#senha', senha);
+
+  // Clique no botão de login (substitua o seletor apropriado)
+  await page.waitForSelector('#botaoEntrar');
+  await page.click('#botaoEntrar');
+  
+  await page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+
+  await page.goto('https://sed.educacao.sp.gov.br/Boletim/BoletimAluno');
+
+  await page.waitForSelector('#txtNrRa');
+  await page.type('#txtNrRa', ra);
+
+  await page.waitForSelector('#txtNrDigRa');
+  await page.type('#txtNrDigRa', digito);
+
+  await page.waitForSelector('#ddlUfRa');
+  await page.select('#ddlUfRa', 'SP');
+
+  await page.waitForSelector('button[type="submit"]');
+  await page.click('button[type="submit"]');
+
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+  
+  await browser.close();
+}
+
+
+// ===== { ROTAS } =====
+
+// API DO BOLETIM
+app.get('/boletim', (req, res) => {
+const usuario = req.query.usuario;
+const senha = decodeURIComponent(req.query.senha);
+
+// Verifica se o usuário e a senha foram fornecidos na URL
+if (!usuario || !senha) {
+  return res.status(400).json({ error: 'Usuário, Senha são obrigatórios.' });
+}
+
+// Chama a função para preencher o formulário e fazer login com os parâmetros recebidos
+boletimSed(usuario, senha)
+  .then((data) => {
+    return res.json(data);
+  })
+  .catch((error) => {
+  console.error('Erro ao preencher o formulário e fazer login:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor' });
+  });
+});
+
+
+// API DOS DADOS DA SED
+app.get('/login', (req, res) => {
+  const usuario = req.query.usuario;
+  const senhaAlterada = req.query.senha;
+  const senha = decodeURIComponent(senhaAlterada);
+
+  // Verifica se o usuário e a senha foram fornecidos na URL
+  if (!usuario || !senha) {
+    return res.status(400).json({ error: 'Usuário e senha são obrigatórios.' });
+  }
+
+  // Chama a função para preencher o formulário e fazer login com os parâmetros recebidos
+  autoFillAndSubmitForm(usuario, senha)
+    .then((data) => {
+      return res.json(data);
+    })
+    .catch((error) => {
+      console.error('Erro ao preencher o formulário e fazer login:', error);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    });
+});
 
 // Inicializa o servidor
 app.listen(port, () => {
